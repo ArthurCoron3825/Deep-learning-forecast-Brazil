@@ -193,7 +193,7 @@ def plot_histograms(name, y_norm, preds_norm, y_real, preds_test_real):
 
 # --------------------------- Main Script --------------------------- #
 if __name__ == "__main__":
-    n_steps = 10
+    n_steps = 10 # GRU sequence of learning time steps
     # Load datasets
     train_data = PixelPrecipDataset("data/train", n_steps=n_steps, fit_scalers=True)
     val_data = PixelPrecipDataset("data/val", n_steps=n_steps, fit_scalers=False, 
