@@ -394,20 +394,167 @@ Additionally, a **context map** shows the study area bounding box within South A
 
 
 
+# Preprocessing
+## 14. ERA5 Pressure-Level Data Download Script
+
+### Purpose
+This script downloads **ERA5 reanalysis data at multiple pressure levels** from the **Copernicus Climate Data Store (CDS)**.  
+It focuses on **wind components** (`u` and `v`) for a defined study region and time period.
+It can be changed to download surface level, by switching  pressure_levels to single_levels, and removing the pressure levels from the script.
+
+### How it works
+1. **CDS API setup**  
+   - Uses the `cdsapi` Python client to access ERA5 data.  
+   - Requires a valid **CDS API key** configured in `~/.cdsapirc`.
+
+2. **Configuration**  
+   - Define the **geographical area** of interest:
+     ```python
+     area = [lat_max, lon_min, lat_min, lon_max]
+     ```
+   - Set the **year** and **months** to download.  
+   - Specify **variables** and **pressure levels**:
+     ```python
+     variables_pressure = ["u_component_of_wind", "v_component_of_wind"]
+     levels = ['1000', '850', '700', '500', '300']
+     ```
+   - Configure **output directory** for downloaded NetCDF files.
+
+3. **Data retrieval loop**  
+   - Loops over each month and variable.  
+   - Calls `c.retrieve()` to download data in **NetCDF format**.  
+   - Supports **four daily time steps**: 00:00, 06:00, 12:00, 18:00 UTC.
+
+4. **File naming and storage**  
+   - Saves files as:
+     ```
+     <variable>_<year><month>.nc
+     ```
+   - Ensures directory exists using `os.makedirs()`.
+
+### Usage
+1. Install the CDS API client:
+   ```bash
+   pip install cdsapi
+
+2. Configure your CDS API key in ~/.cdsapirc.
+
+3. Set desired area, year, months, variables, and levels in the script.
+
+4. Run the script.
 
 
+## 15. ERA5 Data Preprocessing Script
+
+### Purpose
+This script loads, merges, and harmonizes ERA5 reanalysis data from multiple NetCDF files for both surface and pressure-level variables.  
+The output is a single, monthly NetCDF dataset suitable for further analysis or machine learning applications.
+
+### How it Works
+- 1. Configuration
+  - **Data directory**: Location of raw ERA5 NetCDF files (`DATA_DIR`).
+  - **Surface variables**: Dictionary mapping file prefixes to variable names in datasets (`SURFACE_VARIABLES`).
+  - **Pressure-level variables**: Dictionary mapping file prefixes to variable names (`PRESSURE_VARIABLES`).
+  - **Pressure levels**: List of pressure levels to extract, e.g., `[1000, 850, 700, 500, 300]`.
+
+- 2. Functions
+  - **`load_monthly_surface_variable`**  
+  Loads a single surface variable from a monthly NetCDF file and decodes its time coordinate.
+     
+  - **`load_monthly_pressure_variables`**  
+  Loads all pressure-level variables for a month, selecting only the defined pressure levels and renaming variables to include the level (e.g., `u_850hPa`).
+
+  - **`merge_surface_and_pressure`**  
+  Merges all loaded surface and pressure variables into a single `xarray.Dataset`.
+
+- 3. Workflow
+  1. Loop over the target months.
+  2. Load **surface variables**.
+  3. Load **pressure-level variables**.
+  4. Merge all variables into a single dataset.
+  5. Save the merged dataset as `era5_merged_<YEAR><MONTH>.nc`.
+
+- 4. Time Handling
+  - NetCDF time is decoded manually using `num2date` to ensure consistent datetime objects across variables.
+
+- 5. Output
+  - One merged NetCDF file per month.
+  - Variables include both surface variables and pressure-level variables with level identifiers in the name.
+
+### Usage
+1. Place raw ERA5 NetCDF files in `DATA_DIR`.  
+   Example filenames:
+  - 2m_temperature_200702.nc
+  - geopotential_200702.nc
+  - u_component_of_wind_200702.nc
+
+2. Adjust the parameters
+
+3. Run the script.
 
 
+## 16. INMET Precipitation Data Unzip Script
+
+## Purpose
+This script unzips precipitation data from a compressed INMET ZIP file into a specified directory, preparing the data for further analysis.
+
+### How it Works
+
+1. Specify paths:
+   - `zip_path`: Path to the ZIP file containing INMET precipitation data.
+   - `extract_dir`: Directory where the data will be extracted.
+
+2. Create target directory (if it does not exist) using `os.makedirs`.
+
+3. Extract ZIP contents:
+   - Open the ZIP file using `zipfile.ZipFile`.
+   - Extract all contents to `extract_dir`.
+
+4. Print a confirmation message with the paths.
+
+### Usage
+1. Ensure the ZIP file exists at the path specified by zip_path.
+
+2. Adjust extract_dir to your desired extraction location.
+
+3. Run the script.
 
 
+## 17. Utils
 
+### Purpose
+This module provides functions to:
+- Load and clean INMET CSV precipitation data.
+- Convert ERA5 NetCDF precipitation data from meters to millimeters.
+- Compute daily sums or means from time series.
+- Visualize monthly sums, the first 12 days, and histograms.
+- Analyze maximum precipitation per pixel in a study region.
 
+### How it works
+1. Loading Data
+   - `load_clean_precipitation(folder_path)` loads CSV files from a folder, cleans the precipitation values, parses dates, and adds station metadata.
+   
+2. Plotting  
+   - `plot_monthly_precipitation_sum(ds, var_name, title, cmap)` plots total monthly precipitation from a NetCDF/Xarray dataset.  
+   - `plot_precip_12_days_maps(ds, var_name, cmap)` plots maps for the first 12 days of the month.  
+   - `concat_and_plot_precip_histogram(data_dir, target_lat, target_lon, var_name, bin_size, max_bin)` concatenates multiple NetCDF files, extracts precipitation for a pixel, and plots a histogram.
 
+3. Daily Aggregation  
+   - `daily_sum(ds, var_name)` computes daily precipitation from cumulative values.  
+   - `daily_mean(ds)` computes daily mean values for all variables in a dataset.
 
+4. Conversion  
+   - `convert_precipitation_to_mm(dataset, var_name)` converts precipitation from meters to millimeters and updates variable attributes.
 
+5. Pixel Analysis  
+   - `analyze_max_precip_pixel(nc_dir)` identifies the pixel with the highest total precipitation in a specified region.
 
-
-
+### Usage
+1. Load and clean INMET data.
+2. Convert ERA5 precipitation to millimeters.
+3. Aggregate daily precipitation.
+4. Visualize precipitation.
+5. Analyze the wettest pixel.
 
 
 
