@@ -5,7 +5,11 @@ This github has the python files used in the internship about precipitation fore
 
 ## Models
 
-Folder that contains the different deep learning models and mathematical methods
+Folder that contains the different deep learning models and mathematical methods used throughout the intership.
+
+### 1. Binary classification
+
+
 
 
 
